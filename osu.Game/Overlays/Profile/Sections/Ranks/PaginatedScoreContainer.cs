@@ -10,31 +10,46 @@ using osu.Framework.Graphics;
 using osu.Game.Online.API.Requests.Responses;
 using System.Collections.Generic;
 using osu.Game.Online.API;
+using osu.Framework.Allocation;
 
 namespace osu.Game.Overlays.Profile.Sections.Ranks
 {
     public class PaginatedScoreContainer : PaginatedContainer<APILegacyScoreInfo>
     {
-        private readonly bool includeWeight;
         private readonly ScoreType type;
 
-        public PaginatedScoreContainer(ScoreType type, Bindable<User> user, string header, string missing, bool includeWeight = false)
-            : base(user, header, missing)
+        public PaginatedScoreContainer(ScoreType type, Bindable<User> user, string headerText, CounterVisibilityState counterVisibilityState, string missingText = "")
+            : base(user, headerText, missingText, counterVisibilityState)
         {
             this.type = type;
-            this.includeWeight = includeWeight;
 
             ItemsPerPage = 5;
+        }
 
+        [BackgroundDependencyLoader]
+        private void load()
+        {
             ItemsContainer.Direction = FillDirection.Vertical;
         }
 
-        protected override void UpdateItems(List<APILegacyScoreInfo> items)
+        protected override int GetCount(User user)
         {
-            foreach (var item in items)
-                item.Ruleset = Rulesets.GetRuleset(item.RulesetID);
+            switch (type)
+            {
+                case ScoreType.Firsts:
+                    return user.ScoresFirstCount;
 
-            base.UpdateItems(items);
+                default:
+                    return 0;
+            }
+        }
+
+        protected override void OnItemsReceived(List<APILegacyScoreInfo> items)
+        {
+            base.OnItemsReceived(items);
+
+            if (type == ScoreType.Recent)
+                SetCount(items.Count);
         }
 
         protected override APIRequest<List<APILegacyScoreInfo>> CreateRequest() =>
@@ -45,10 +60,10 @@ namespace osu.Game.Overlays.Profile.Sections.Ranks
             switch (type)
             {
                 default:
-                    return new DrawablePerformanceScore(model, includeWeight ? Math.Pow(0.95, ItemsContainer.Count) : (double?)null);
+                    return new DrawableProfileScore(model.CreateScoreInfo(Rulesets));
 
-                case ScoreType.Recent:
-                    return new DrawableTotalScore(model);
+                case ScoreType.Best:
+                    return new DrawableProfileWeightedScore(model.CreateScoreInfo(Rulesets), Math.Pow(0.95, ItemsContainer.Count));
             }
         }
     }

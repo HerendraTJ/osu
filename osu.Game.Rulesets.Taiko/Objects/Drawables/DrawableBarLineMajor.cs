@@ -5,7 +5,6 @@ using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osuTK;
 using osu.Framework.Graphics.Shapes;
-using osu.Game.Rulesets.Objects;
 
 namespace osu.Game.Rulesets.Taiko.Objects.Drawables
 {
@@ -54,7 +53,7 @@ namespace osu.Game.Rulesets.Taiko.Objects.Drawables
                 }
             });
 
-            Tracker.Alpha = 1f;
+            Line.Alpha = 1f;
         }
 
         protected override void LoadComplete()

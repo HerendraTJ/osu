@@ -6,6 +6,7 @@ using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Graphics.Textures;
+using osu.Game.Rulesets.Objects.Drawables;
 using osuTK;
 
 namespace osu.Game.Rulesets.Osu.Objects.Drawables.Pieces
@@ -16,14 +17,16 @@ namespace osu.Game.Rulesets.Osu.Objects.Drawables.Pieces
         {
             Size = new Vector2(OsuHitObject.OBJECT_RADIUS * 2);
             Masking = true;
+
             CornerRadius = Size.X / 2;
+            CornerExponent = 2;
 
             Anchor = Anchor.Centre;
             Origin = Anchor.Centre;
         }
 
         [BackgroundDependencyLoader]
-        private void load(TextureStore textures)
+        private void load(TextureStore textures, DrawableHitObject drawableHitObject)
         {
             InternalChildren = new Drawable[]
             {
@@ -33,7 +36,7 @@ namespace osu.Game.Rulesets.Osu.Objects.Drawables.Pieces
                     Origin = Anchor.Centre,
                     Texture = textures.Get(@"Gameplay/osu/disc"),
                 },
-                new TrianglesPiece
+                new TrianglesPiece((int)drawableHitObject.HitObject.StartTime)
                 {
                     RelativeSizeAxes = Axes.Both,
                     Blending = BlendingParameters.Additive,

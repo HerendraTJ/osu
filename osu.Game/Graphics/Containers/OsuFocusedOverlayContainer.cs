@@ -35,7 +35,7 @@ namespace osu.Game.Graphics.Containers
         [Resolved]
         private PreviewTrackManager previewTrackManager { get; set; }
 
-        protected readonly Bindable<OverlayActivation> OverlayActivationMode = new Bindable<OverlayActivation>(OverlayActivation.All);
+        protected readonly IBindable<OverlayActivation> OverlayActivationMode = new Bindable<OverlayActivation>(OverlayActivation.All);
 
         [BackgroundDependencyLoader(true)]
         private void load(AudioManager audio)
@@ -67,33 +67,21 @@ namespace osu.Game.Graphics.Containers
         // receive input outside our bounds so we can trigger a close event on ourselves.
         public override bool ReceivePositionalInputAt(Vector2 screenSpacePos) => BlockScreenWideMouse || base.ReceivePositionalInputAt(screenSpacePos);
 
-        protected override bool OnClick(ClickEvent e)
-        {
-            if (!base.ReceivePositionalInputAt(e.ScreenSpaceMousePosition))
-                Hide();
+        private bool closeOnMouseUp;
 
-            return base.OnClick(e);
+        protected override bool OnMouseDown(MouseDownEvent e)
+        {
+            closeOnMouseUp = !base.ReceivePositionalInputAt(e.ScreenSpaceMousePosition);
+
+            return base.OnMouseDown(e);
         }
 
-        private bool closeOnDragEnd;
-
-        protected override bool OnDragStart(DragStartEvent e)
+        protected override void OnMouseUp(MouseUpEvent e)
         {
-            if (!base.ReceivePositionalInputAt(e.ScreenSpaceMousePosition))
-                closeOnDragEnd = true;
-
-            return base.OnDragStart(e);
-        }
-
-        protected override bool OnDragEnd(DragEndEvent e)
-        {
-            if (closeOnDragEnd)
-            {
+            if (closeOnMouseUp && !base.ReceivePositionalInputAt(e.ScreenSpaceMousePosition))
                 Hide();
-                closeOnDragEnd = false;
-            }
 
-            return base.OnDragEnd(e);
+            base.OnMouseUp(e);
         }
 
         public virtual bool OnPressed(GlobalAction action)
@@ -111,7 +99,11 @@ namespace osu.Game.Graphics.Containers
             return false;
         }
 
-        public bool OnReleased(GlobalAction action) => false;
+        public void OnReleased(GlobalAction action)
+        {
+        }
+
+        private bool playedPopInSound;
 
         protected override void UpdateState(ValueChangedEvent<Visibility> state)
         {
@@ -120,16 +112,24 @@ namespace osu.Game.Graphics.Containers
                 case Visibility.Visible:
                     if (OverlayActivationMode.Value == OverlayActivation.Disabled)
                     {
+                        // todo: visual/audible feedback that this operation could not complete.
                         State.Value = Visibility.Hidden;
                         return;
                     }
 
                     samplePopIn?.Play();
+                    playedPopInSound = true;
+
                     if (BlockScreenWideMouse && DimMainContent) game?.AddBlockingOverlay(this);
                     break;
 
                 case Visibility.Hidden:
-                    samplePopOut?.Play();
+                    if (playedPopInSound)
+                    {
+                        samplePopOut?.Play();
+                        playedPopInSound = false;
+                    }
+
                     if (BlockScreenWideMouse) game?.RemoveBlockingOverlay(this);
                     break;
             }

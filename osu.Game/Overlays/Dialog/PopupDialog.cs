@@ -10,7 +10,6 @@ using osu.Framework.Graphics.Effects;
 using osu.Framework.Graphics.Shapes;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Input.Events;
-using osu.Game.Graphics;
 using osu.Game.Graphics.Backgrounds;
 using osu.Game.Graphics.Containers;
 using osuTK;
@@ -21,8 +20,8 @@ namespace osu.Game.Overlays.Dialog
 {
     public abstract class PopupDialog : VisibilityContainer
     {
-        public static readonly float ENTER_DURATION = 500;
-        public static readonly float EXIT_DURATION = 200;
+        public const float ENTER_DURATION = 500;
+        public const float EXIT_DURATION = 200;
 
         private readonly Vector2 ringSize = new Vector2(100f);
         private readonly Vector2 ringMinifiedSize = new Vector2(20f);
@@ -43,25 +42,34 @@ namespace osu.Game.Overlays.Dialog
             set => icon.Icon = value;
         }
 
-        private string text;
+        private string headerText;
 
         public string HeaderText
         {
-            get => text;
+            get => headerText;
             set
             {
-                if (text == value)
+                if (headerText == value)
                     return;
 
-                text = value;
-
+                headerText = value;
                 header.Text = value;
             }
         }
 
+        private string bodyText;
+
         public string BodyText
         {
-            set => body.Text = value;
+            get => bodyText;
+            set
+            {
+                if (bodyText == value)
+                    return;
+
+                bodyText = value;
+                body.Text = value;
+            }
         }
 
         public IEnumerable<PopupDialogButton> Buttons
@@ -114,13 +122,13 @@ namespace osu.Game.Overlays.Dialog
                                 new Box
                                 {
                                     RelativeSizeAxes = Axes.Both,
-                                    Colour = OsuColour.FromHex(@"221a21"),
+                                    Colour = Color4Extensions.FromHex(@"221a21"),
                                 },
                                 new Triangles
                                 {
                                     RelativeSizeAxes = Axes.Both,
-                                    ColourLight = OsuColour.FromHex(@"271e26"),
-                                    ColourDark = OsuColour.FromHex(@"1e171e"),
+                                    ColourLight = Color4Extensions.FromHex(@"271e26"),
+                                    ColourDark = Color4Extensions.FromHex(@"1e171e"),
                                     TriangleScale = 4,
                                 },
                             },
@@ -241,7 +249,7 @@ namespace osu.Game.Overlays.Dialog
 
         protected override void PopOut()
         {
-            if (!actionInvoked)
+            if (!actionInvoked && content.IsPresent)
                 // In the case a user did not choose an action before a hide was triggered, press the last button.
                 // This is presumed to always be a sane default "cancel" action.
                 buttonsContainer.Last().Click();
